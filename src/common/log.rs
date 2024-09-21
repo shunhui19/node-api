@@ -17,12 +17,16 @@ impl Logger {
                     .with_timer(CustomTimer)
                     .with_ansi(false)
                     .with_max_level(Level::TRACE)
+                    .with_file(true)
+                    .with_line_number(true)
                     .finish();
                 _ = tracing::subscriber::set_global_default(subscriber);
             }
             None => {
                 let subscriber = tracing_subscriber::fmt()
                     .with_timer(CustomTimer)
+                    .with_file(true)
+                    .with_line_number(true)
                     .with_max_level(Level::TRACE)
                     .finish();
                 _ = tracing::subscriber::set_global_default(subscriber);
