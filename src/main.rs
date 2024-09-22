@@ -4,6 +4,7 @@ use tracing::info;
 
 mod common;
 mod controllers;
+mod middlewares;
 mod routers;
 
 use common::log::Logger;
