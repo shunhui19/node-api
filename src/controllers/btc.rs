@@ -1,9 +1,11 @@
-use crate::controllers::base::ResultResponse;
+use crate::controllers::base::{ResultResponse, REQUEST_FAILED};
 use axum::Json;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::{info, warn};
+
+const BTC_MAINNET: &str = "https://bitcoin-rpc.publicnode.com";
 
 pub async fn btc_handle(Json(payload): Json<BTCRequest>) -> Json<ResultResponse> {
     info!(
@@ -17,7 +19,7 @@ pub async fn btc_handle(Json(payload): Json<BTCRequest>) -> Json<ResultResponse>
             err_msg.push_str(e.to_string().as_str());
             warn!(err_msg, "request failed, the reason");
             let result = ResultResponse {
-                code: -1,
+                code: REQUEST_FAILED,
                 msg: json!(err_msg),
                 data: Value::Null,
             };
@@ -36,7 +38,7 @@ pub async fn btc_handle(Json(payload): Json<BTCRequest>) -> Json<ResultResponse>
 }
 async fn call(payload: BTCRequest) -> Result<BTCResponse, reqwest::Error> {
     let resp = Client::new()
-        .post("https://bitcoin-rpc.publicnode.com")
+        .post(BTC_MAINNET)
         .json(&payload)
         .send()
         .await?
