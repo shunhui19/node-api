@@ -1,16 +1,46 @@
-use crate::controllers::base::{ResultResponse, REQUEST_FAILED};
-use axum::Json;
+use crate::{
+    controllers::base::{ResultResponse, REQUEST_FAILED},
+    middlewares::jwt::validate_jwt,
+};
+use axum::{http::HeaderMap, Json};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 const BTC_MAINNET: &str = "https://bitcoin-rpc.publicnode.com";
 
-pub async fn btc_handle(Json(payload): Json<BTCRequest>) -> Json<ResultResponse> {
+pub async fn btc_handle(
+    header: HeaderMap,
+    Json(payload): Json<BTCRequest>,
+) -> Json<ResultResponse> {
+    let token = header.get("Authorization");
+    if token.is_none() {
+        error!("no token");
+        return Json(ResultResponse {
+            code: REQUEST_FAILED,
+            msg: json!("no token"),
+            data: Value::Null,
+        });
+    };
+
+    // authorization jwt
+    let auth_token = validate_jwt(token.unwrap().to_str().unwrap());
+    match auth_token {
+        Err(e) => {
+            warn!("authorization no passed");
+            return Json(ResultResponse {
+                code: REQUEST_FAILED,
+                msg: json!(e.to_string()),
+                data: Value::Null,
+            });
+        }
+        _ => info!("authorization passed"),
+    };
+
     info!(
-        "method: {:?}, params: {:?}",
-        &payload.method, &payload.params
+        "method: {:?}, params: {:?}, token: {:?}",
+        &payload.method, &payload.params, token
     );
     let resp = call(payload).await;
     match resp {
