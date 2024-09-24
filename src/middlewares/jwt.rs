@@ -1,3 +1,11 @@
+use std::sync::Arc;
+
+use axum::middleware::Next;
+use axum::{
+    body::Body,
+    http::{Request, StatusCode},
+    response::Response,
+};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{
     decode, encode, errors::Result as JwtResult, Algorithm, DecodingKey, EncodingKey, Header,
@@ -15,7 +23,7 @@ pub struct Claims {
     exp: usize,
 }
 
-pub fn validate_jwt(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
+fn validate_jwt(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let token_data = decode(
         token,
         &DecodingKey::from_secret(SECRET.as_ref()),
@@ -40,4 +48,19 @@ fn generate_jwt(user_id: &str) -> JwtResult<String> {
 
 pub async fn get_jwt() -> String {
     generate_jwt(SECRET).unwrap()
+}
+
+pub async fn jwt_middleware(mut req: Request<Body>, next: Next) -> Result<Response, StatusCode> {
+    if let Some(auth_header) = req.headers().get("Authorization") {
+        if let Ok(token) = auth_header.to_str() {
+            match validate_jwt(token) {
+                Ok(claims) => {
+                    req.extensions_mut().insert(Arc::new(claims));
+                    return Ok(next.run(req).await);
+                }
+                Err(_) => return Err(StatusCode::UNAUTHORIZED),
+            }
+        }
+    }
+    Err(StatusCode::UNAUTHORIZED)
 }
