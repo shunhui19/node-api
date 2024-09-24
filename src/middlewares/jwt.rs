@@ -12,6 +12,7 @@ use jsonwebtoken::{
     Validation,
 };
 use serde::{Deserialize, Serialize};
+use tracing::warn;
 
 const SECRET: &str = "hell, rust";
 
@@ -58,9 +59,13 @@ pub async fn jwt_middleware(mut req: Request<Body>, next: Next) -> Result<Respon
                     req.extensions_mut().insert(Arc::new(claims));
                     return Ok(next.run(req).await);
                 }
-                Err(_) => return Err(StatusCode::UNAUTHORIZED),
+                Err(e) => {
+                    warn!("Authorization jwt failed: {:?}", e);
+                    return Err(StatusCode::UNAUTHORIZED);
+                }
             }
         }
     }
+    warn!("Authorization jwt failed");
     Err(StatusCode::UNAUTHORIZED)
 }
