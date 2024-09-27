@@ -20,6 +20,7 @@ tracing-attributes = "0.1"
 tracing-fmt = "0.1"
 
 jsonwebtoken = "9.3"
-tower = "0.5.1"
+tower = { version = "0.5.1", features = ["full"] }
 futures-util = "0.3.30"
 hyper = "1.4.1"
+tower-http = { version = "0.6.1", features = ["full"] }
