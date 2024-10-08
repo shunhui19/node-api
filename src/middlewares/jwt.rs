@@ -14,17 +14,17 @@ use jsonwebtoken::{
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
-const SECRET: &str = "hell, rust";
+pub const SECRET: &str = "hell, rust";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     // user unique identify
-    sub: String,
+    pub sub: String,
     // expire time
     exp: usize,
 }
 
-fn validate_jwt(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
+pub fn validate_jwt(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let token_data = decode(
         token,
         &DecodingKey::from_secret(SECRET.as_ref()),
@@ -34,9 +34,10 @@ fn validate_jwt(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
 }
 
 fn generate_jwt(user_id: &str) -> JwtResult<String> {
+    // TODO: how long expired is get from config file or DB
     let claims = Claims {
         sub: user_id.to_owned(),
-        exp: (Utc::now() + Duration::seconds(60)).timestamp() as usize,
+        exp: (Utc::now() + Duration::hours(6)).timestamp() as usize,
     };
 
     let token = encode(
