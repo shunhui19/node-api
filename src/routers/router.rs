@@ -1,5 +1,7 @@
 use axum::middleware;
 use axum::{routing::get, Router};
+use tower::ServiceBuilder;
+use tower_http::trace::TraceLayer;
 
 use crate::controllers::btc::btc_handle;
 use crate::middlewares::jwt::{get_jwt, jwt_middleware};
@@ -19,6 +21,7 @@ pub fn get_routers() -> Router {
             total_request_limit(req, rate_limiter, next)
         }))
         .route("/v1/auth/get_jwt", get(get_jwt))
+        .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
 }
 
 async fn root() -> String {
