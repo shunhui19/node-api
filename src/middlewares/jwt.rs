@@ -48,8 +48,14 @@ fn generate_jwt(user_id: &str) -> JwtResult<String> {
     Ok(token)
 }
 
-pub async fn get_jwt() -> String {
-    generate_jwt(SECRET).unwrap()
+pub async fn get_jwt() -> Result<String, StatusCode> {
+    match generate_jwt(SECRET) {
+        Ok(token) => Ok(token),
+        Err(_) => {
+            warn!("Generate token failed");
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
 }
 
 pub async fn jwt_middleware(mut req: Request<Body>, next: Next) -> Result<Response, StatusCode> {
