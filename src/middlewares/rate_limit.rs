@@ -1,15 +1,14 @@
 use axum::{
     body::Body,
     http::{Request, StatusCode},
-    response::IntoResponse,
+    middleware::Next,
+    response::Response,
 };
-use std::time::Duration;
 use std::{
     collections::HashMap,
     sync::{atomic::AtomicUsize, atomic::Ordering, Arc, Mutex},
 };
-use tower::{limit::RateLimitLayer, Layer};
-use tracing::{debug, warn};
+use tracing::warn;
 
 use super::jwt::{validate_jwt, SECRET};
 
@@ -62,7 +61,6 @@ impl RateLimiter {
     }
 
     fn check_and_increment(&self, key: &str) -> bool {
-        debug!("key is: {:?}", key);
         let mut current_request_num = match self.current_request_num.lock() {
             Ok(lock) => lock,
             Err(err) => {
@@ -97,39 +95,59 @@ impl RateLimiter {
         true
     }
 
-    fn get_qps_for_key(&self, key: &str) -> usize {
-        match self.config.lock() {
-            Ok(lock) => lock
-                .limits
-                .get(key)
-                .map(|limit| limit.qps)
-                .unwrap_or(usize::MAX),
-            Err(err) => {
-                warn!("Failed to acquire lock on config: {:?}", err);
-                usize::MAX
-            }
-        }
-    }
+    // fn get_qps_for_key(&self, key: &str) -> usize {
+    //     match self.config.lock() {
+    //         Ok(lock) => lock
+    //             .limits
+    //             .get(key)
+    //             .map(|limit| limit.qps)
+    //             .unwrap_or(usize::MAX),
+    //         Err(err) => {
+    //             warn!("Failed to acquire lock on config: {:?}", err);
+    //             usize::MAX
+    //         }
+    //     }
+    // }
 
-    pub fn build_layer_for_key(&self, key: &str) -> impl Layer<Body> + Clone {
-        let qps = self.get_qps_for_key(key);
-        RateLimitLayer::new(qps as u64, Duration::from_secs(1))
-    }
+    // pub fn build_layer_for_key(&self, key: &str) -> impl Layer<Body> + Clone {
+    //     let qps = self.get_qps_for_key(key);
+    //     RateLimitLayer::new(qps as u64, Duration::from_secs(1))
+    // }
 }
 
-pub async fn rate_limit(req: Request<Body>, rate_limiter: RateLimiter) -> impl IntoResponse {
-    // TODO: optimization unwrap().
-    let token = req
-        .headers()
-        .get("Authorization")
-        .unwrap()
-        .to_str()
-        .unwrap();
-    let key = validate_jwt(token).unwrap();
+pub async fn total_request_limit(
+    req: Request<Body>,
+    rate_limiter: RateLimiter,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    let token = match req.headers().get("Authorization") {
+        Some(token) => token,
+        None => {
+            warn!("Authorization header is missing");
+            return Err(StatusCode::UNAUTHORIZED);
+        }
+    };
+
+    let token_str = match token.to_str() {
+        Ok(key) => key,
+        Err(_) => {
+            warn!("Invalid token format, token: {:?}", token);
+            return Err(StatusCode::BAD_REQUEST);
+        }
+    };
+
+    let key = match validate_jwt(token_str) {
+        Ok(key) => key,
+        Err(_) => {
+            warn!("Invali token or JWT validation failed");
+            return Err(StatusCode::UNAUTHORIZED);
+        }
+    };
 
     if !rate_limiter.check_and_increment(key.sub.as_str()) {
-        return (StatusCode::TOO_MANY_REQUESTS, "Rate limit exceeded");
+        warn!("the requests of the key({:?}) is exceeded", key);
+        return Err(StatusCode::TOO_MANY_REQUESTS);
     }
 
-    (StatusCode::OK, "Request processed")
+    Ok(next.run(req).await)
 }
