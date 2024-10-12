@@ -4,11 +4,13 @@ use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::{self, fmt::format::Writer};
 
+use crate::CONFIG;
+
 pub struct Logger;
 
 impl Logger {
-    pub fn init(log_file: Option<String>) {
-        match log_file {
+    pub fn init() {
+        match CONFIG.server.log_file_name.clone() {
             Some(mut f) => {
                 f.push_str(".log");
                 let log_file = rolling::daily("logs", f);
@@ -54,7 +56,7 @@ mod test {
     #[test]
     fn log_test() {
         use tracing::{debug, error, info, trace, warn};
-        Logger::init(None);
+        Logger::init();
         // Logger::init(Some("app".to_string()));
         error!("error log");
         warn!("warning log");

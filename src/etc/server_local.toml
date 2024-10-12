@@ -1,0 +1,41 @@
+[server]
+local_ip = "127.0.0.1"
+local_port = 3000
+# only support second and  types.
+timeout = 1
+log_file_name = ""
+
+[token]
+secret = "hell, rust"
+# support second, min, hour and day types.
+expire = "1d"
+
+# [db]
+# connect = ""
+# db_name = ""
+# username = ""
+# password = ""
+
+# [node]
+# btc = {
+#     devnet = [
+#         { name = "publicnode", url = "" }
+#     ],
+#     testnet = [
+#         { name = "publicnode", url = "" }
+#     ],
+#     mainnet = [
+#         { name = "publicnode", url = "" }
+#     ]
+# }
+# eth = {
+#     devnet = [
+#         { name = "publicnode", url = "" }
+#     ],
+#     testnet = [
+#         { name = "publicnode", url = "" }
+#     ],
+#     mainnet = [
+#         { name = "publicnode", url = "" }
+#     ]
+# }

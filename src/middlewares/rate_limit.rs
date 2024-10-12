@@ -10,7 +10,9 @@ use std::{
 };
 use tracing::warn;
 
-use super::jwt::{validate_jwt, SECRET};
+use crate::CONFIG;
+
+use super::jwt::validate_jwt;
 
 #[derive(Clone)]
 pub struct RateLimiter {
@@ -28,9 +30,9 @@ impl Default for RateLimitConfig {
     fn default() -> Self {
         let mut limit_hash_map = HashMap::new();
         limit_hash_map.insert(
-            SECRET.to_string(),
+            CONFIG.token.secret.clone(),
             RateLimitInfo {
-                qps: 1,
+                // qps: 1,
                 total_request_num: 15,
             },
         );
@@ -44,7 +46,7 @@ impl Default for RateLimitConfig {
 // Default config for every key.
 #[derive(Clone)]
 struct RateLimitInfo {
-    qps: usize,
+    // qps: usize,
     total_request_num: usize,
 }
 
@@ -56,9 +58,9 @@ impl RateLimiter {
         }
     }
 
-    fn update_config(&self, qps: usize, total_request_num: usize) {
-        todo!("todo");
-    }
+    // fn update_config(&self, qps: usize, total_request_num: usize) {
+    //     todo!("todo");
+    // }
 
     fn check_and_increment(&self, key: &str) -> bool {
         let mut current_request_num = match self.current_request_num.lock() {

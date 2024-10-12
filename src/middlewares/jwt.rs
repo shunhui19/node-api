@@ -14,7 +14,8 @@ use jsonwebtoken::{
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
-pub const SECRET: &str = "hell, rust";
+use crate::configs::config::parse_str_to_num;
+use crate::CONFIG;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -27,29 +28,33 @@ pub struct Claims {
 pub fn validate_jwt(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let token_data = decode(
         token,
-        &DecodingKey::from_secret(SECRET.as_ref()),
+        &DecodingKey::from_secret(CONFIG.token.secret.as_bytes()),
         &Validation::new(Algorithm::HS256),
     )?;
     Ok(token_data.claims)
 }
 
-fn generate_jwt(user_id: &str) -> JwtResult<String> {
-    // TODO: how long expired is get from config file or DB
+fn generate_jwt(user_id: &str, expire: u64) -> JwtResult<String> {
     let claims = Claims {
         sub: user_id.to_owned(),
-        exp: (Utc::now() + Duration::hours(6)).timestamp() as usize,
+        exp: (Utc::now() + Duration::seconds(expire as i64)).timestamp() as usize,
     };
 
     let token = encode(
         &Header::new(Algorithm::HS256),
         &claims,
-        &EncodingKey::from_secret(SECRET.as_bytes()),
+        &EncodingKey::from_secret(CONFIG.token.secret.as_bytes()),
     )?;
     Ok(token)
 }
 
 pub async fn get_jwt() -> Result<String, StatusCode> {
-    match generate_jwt(SECRET) {
+    let expire = match parse_str_to_num(CONFIG.token.expire.as_str()) {
+        Ok(exp) => exp,
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+    };
+
+    match generate_jwt(CONFIG.token.secret.as_str(), expire) {
         Ok(token) => Ok(token),
         Err(_) => {
             warn!("Generate token failed");
