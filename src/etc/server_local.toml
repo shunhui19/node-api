@@ -3,7 +3,14 @@ local_ip = "127.0.0.1"
 local_port = 3000
 # only support second and  types.
 timeout = 30
+# "" => output to Stdout
+# "xxx" => output to xxx file
 log_file_name = ""
+# 0 => Trace
+# 1 => Debug
+# 2 => Warn
+# 3 => Info
+# 4 => Error
 log_level = 2
 
 [token]
