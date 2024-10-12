@@ -2,13 +2,14 @@
 local_ip = "127.0.0.1"
 local_port = 3000
 # only support second and  types.
-timeout = 1
+timeout = 30
 log_file_name = ""
+log_level = 2
 
 [token]
 secret = "hell, rust"
 # support second, min, hour and day types.
-expire = "1d"
+expire = "100d"
 
 # [db]
 # connect = ""

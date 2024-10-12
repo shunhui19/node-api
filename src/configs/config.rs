@@ -2,7 +2,7 @@ use core::panic;
 use std::net::IpAddr;
 
 use serde::{Deserialize, Deserializer};
-use tracing::error;
+use tracing::{error, Level};
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -18,6 +18,25 @@ pub struct Server {
     pub timeout: u16,
     #[serde(deserialize_with = "deserialize_optional_string")]
     pub log_file_name: Option<String>,
+    #[serde(deserialize_with = "deserialize_level_u8")]
+    pub log_level: Level,
+}
+
+fn deserialize_level_u8<'de, D>(deserializer: D) -> Result<Level, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let level_num: u8 = u8::deserialize(deserializer)?;
+    match level_num {
+        0 => Ok(Level::TRACE),
+        1 => Ok(Level::DEBUG),
+        2 => Ok(Level::INFO),
+        3 => Ok(Level::WARN),
+        4 => Ok(Level::ERROR),
+
+        _ => Ok(Level::INFO),
+        // _ => Err(de::Error::custom(format!("Invalid level: {}", level_num))),
+    }
 }
 
 fn deserialize_optional_string<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
@@ -125,6 +144,7 @@ mod test {
         # support second and min types.
         timeout = 1
         log_file_name = ""
+        log_level = 1
 
         [token]
         secret = "hell, rust"

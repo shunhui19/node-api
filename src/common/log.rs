@@ -1,13 +1,15 @@
 use std::fmt;
 
-use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::{self, fmt::format::Writer};
+
+use crate::CONFIG;
 
 pub struct Logger;
 
 impl Logger {
     pub fn init(log_file: Option<String>) {
+        let level = CONFIG.server.log_level;
         match log_file {
             Some(mut f) => {
                 f.push_str(".log");
@@ -16,7 +18,7 @@ impl Logger {
                     .with_writer(log_file)
                     .with_timer(CustomTimer)
                     .with_ansi(false)
-                    .with_max_level(Level::TRACE)
+                    .with_max_level(level)
                     .with_file(true)
                     .with_line_number(true)
                     .finish();
@@ -27,7 +29,7 @@ impl Logger {
                     .with_timer(CustomTimer)
                     .with_file(true)
                     .with_line_number(true)
-                    .with_max_level(Level::TRACE)
+                    .with_max_level(level)
                     .finish();
                 _ = tracing::subscriber::set_global_default(subscriber);
             }
