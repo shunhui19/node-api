@@ -17,7 +17,7 @@ static CONFIG: LazyLock<Config> = LazyLock::new(Config::init_config);
 
 #[tokio::main]
 async fn main() {
-    Logger::init();
+    Logger::init(CONFIG.server.log_file_name.clone());
 
     let listener = TcpListener::bind((CONFIG.server.local_ip, CONFIG.server.local_port))
         .await
