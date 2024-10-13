@@ -1,65 +1,16 @@
 use core::panic;
-use std::net::IpAddr;
 
-use serde::{Deserialize, Deserializer};
-use tracing::{error, Level};
+use serde::Deserialize;
+use tracing::error;
+
+use super::{node::NodeConfig, server::Server, token::Token};
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
     pub server: Server,
     pub token: Token,
-    // pub db: Db,
+    pub node: NodeConfig,
 }
-
-#[derive(Deserialize, Debug)]
-pub struct Server {
-    pub local_ip: IpAddr,
-    pub local_port: u16,
-    pub timeout: u16,
-    #[serde(deserialize_with = "deserialize_optional_string")]
-    pub log_file_name: Option<String>,
-    #[serde(deserialize_with = "deserialize_level_u8")]
-    pub log_level: Level,
-}
-
-fn deserialize_level_u8<'de, D>(deserializer: D) -> Result<Level, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let level_num: u8 = u8::deserialize(deserializer)?;
-    match level_num {
-        0 => Ok(Level::TRACE),
-        1 => Ok(Level::DEBUG),
-        2 => Ok(Level::INFO),
-        3 => Ok(Level::WARN),
-        4 => Ok(Level::ERROR),
-
-        _ => Ok(Level::INFO),
-        // _ => Err(de::Error::custom(format!("Invalid level: {}", level_num))),
-    }
-}
-
-fn deserialize_optional_string<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s: Option<String> = Option::deserialize(deserializer)?;
-    Ok(s.and_then(|s| if s.is_empty() { None } else { Some(s) }))
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Token {
-    pub secret: String,
-    pub expire: String,
-}
-
-// #[derive(Deserialize, Debug)]
-// pub struct Db {
-//     connect: String,
-//     db_name: String,
-//     username: String,
-//     password: String,
-// }
 
 impl Config {
     pub fn init_config() -> Self {
@@ -152,13 +103,17 @@ mod test {
         expire = "1d"
 
 
-        [db]
-        connect = ""
-        db_name = ""
-        username = ""
-        password = ""
+        [node.btc]
+        devnet = []
+        testnet = [
+            { name = "publicnode", url = "https://bitcoin-testnet-rpc.publicnode.com" }
+        ]
+        mainnet = [
+            { name = "publicnode", url = "https://bitcoin-rpc.publicnode.com" }
+        ]
         "#;
         let config: Config = toml::from_str(config_str).unwrap();
+        println!("{:?}", config.node.btc.testnet[0].name);
         assert_eq!(
             parse_str_to_num(config.token.expire.as_str()).unwrap(),
             86400
