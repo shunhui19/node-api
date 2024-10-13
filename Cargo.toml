@@ -24,3 +24,4 @@ tower = { version = "0.5.1", features = ["full"] }
 futures-util = "0.3.30"
 hyper = "1.4.1"
 tower-http = { version = "0.6.1", features = ["full"] }
+random-number = "0.1.8"

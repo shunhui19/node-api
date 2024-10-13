@@ -24,26 +24,12 @@ expire = "100d"
 # username = ""
 # password = ""
 
-# [node]
-# btc = {
-#     devnet = [
-#         { name = "publicnode", url = "" }
-#     ],
-#     testnet = [
-#         { name = "publicnode", url = "" }
-#     ],
-#     mainnet = [
-#         { name = "publicnode", url = "" }
-#     ]
-# }
-# eth = {
-#     devnet = [
-#         { name = "publicnode", url = "" }
-#     ],
-#     testnet = [
-#         { name = "publicnode", url = "" }
-#     ],
-#     mainnet = [
-#         { name = "publicnode", url = "" }
-#     ]
-# }
+[node.btc]
+devnet = []
+testnet = [
+    { name = "publicnode-1", url = "https://bitcoin-testnet-rpc.publicnode.com" },
+    { name = "publicnode-2", url = "https://bitcoin-testnet-rpc.publicnode.com" }
+]
+mainnet = [
+    { name = "publicnode", url = "https://bitcoin-rpc.publicnode.com" }
+]
