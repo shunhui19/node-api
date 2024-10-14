@@ -8,6 +8,7 @@ mod common;
 mod configs;
 mod controllers;
 mod middlewares;
+mod models;
 mod routers;
 
 use common::log::Logger;
