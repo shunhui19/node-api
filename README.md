@@ -47,3 +47,8 @@ CREATE TABLE rate_limits (
 -- SET max_requests_per_second = 20, total_request_number = 2000, updated_at = CURRENT_TIMESTAMP
 -- WHERE token_id = 1;
 
+
+
+
+DATABASE_URL="postgres://postgresql:postgresql@localhost/node-api" cargo sqlx prepare
+
