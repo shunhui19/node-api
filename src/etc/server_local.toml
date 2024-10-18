@@ -18,11 +18,13 @@ secret = "hell, rust"
 # support second, min, hour and day types.
 expire = "100d"
 
-# [db]
-# connect = ""
-# db_name = ""
-# username = ""
-# password = ""
+[db]
+host = "127.0.0.1"
+port = 5432
+db_name = "node-api"
+username = "postgresql"
+password = "postgresql"
+
 
 [node.btc]
 devnet = []

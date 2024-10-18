@@ -3,13 +3,15 @@ use core::panic;
 use serde::Deserialize;
 use tracing::error;
 
-use super::{node::NodeConfig, server::Server, token::Token};
+use super::{db::Db, node::NodeConfig, server::Server, token::Token};
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
     pub server: Server,
     pub token: Token,
     pub node: NodeConfig,
+    #[allow(dead_code)]
+    pub db: Db,
 }
 
 impl Config {
@@ -102,6 +104,12 @@ mod test {
         # support second, min, hour and day types.
         expire = "1d"
 
+        [db]
+        host = "127.0.0.1"
+        port = 5432
+        db_name = "node-api"
+        username = "postgresql"
+        password = "postgresql"
 
         [node.btc]
         devnet = []

@@ -1,7 +1,8 @@
 use std::sync::LazyLock;
 
 use routers::router::get_routers;
-use tokio::net::TcpListener;
+use sqlx::PgPool;
+use tokio::{net::TcpListener, sync::OnceCell};
 use tracing::info;
 
 mod common;
@@ -15,6 +16,7 @@ use common::log::Logger;
 use configs::config::Config;
 
 static CONFIG: LazyLock<Config> = LazyLock::new(Config::init_config);
+static DB_POOL: OnceCell<PgPool> = OnceCell::const_new();
 
 #[tokio::main]
 async fn main() {
