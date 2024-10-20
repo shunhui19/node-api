@@ -16,7 +16,7 @@ struct Users {
 }
 
 impl Users {
-    pub async fn find_by_username(name: &str) -> Result<Self, Error> {
+    pub async fn get_user_by_username(name: &str) -> Result<Self, Error> {
         let pool = db::get_pg_pool().await;
         // let user = sqlx::query_as("SELECT * FROM users WHERE username = $1")
         //     .bind(name)
@@ -26,6 +26,24 @@ impl Users {
             .fetch_one(pool)
             .await?;
         Ok(user)
+    }
+
+    pub async fn register_user(
+        username: String,
+        password: String,
+        email: String,
+    ) -> Result<i32, Error> {
+        let pool = db::get_pg_pool().await;
+        let row = sqlx::query!(
+            "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id",
+            username,
+            email,
+            password
+        )
+        .fetch_one(pool)
+        .await?;
+
+        Ok(row.id)
     }
 }
 
@@ -45,7 +63,10 @@ mod test {
         //     }
         // };
         assert_eq!(
-            Users::find_by_username("frank.kuang").await.unwrap().email,
+            Users::get_user_by_username("frank.kuang")
+                .await
+                .unwrap()
+                .email,
             "shunhui29@163.com"
         );
     }
